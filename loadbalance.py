@@ -24,11 +24,19 @@ def select_server():
 	choose_serverPort = parsedResult[0]['attachmentPoint'][0]['port']
 	choose_serverMac = parsedResult[0]['mac'][0]
 
-	command = "curl -s -d '{\"switch\": \"%s\", \"name\":\"%s\", \"dst-ip\":\"%s\", \"dst-mac\":\"%s\", \"ether-type\":\"%s\", \"priority\":\"32768\",\"active\":\"true\", \"actions\":\"set-dst-ip=%s,set-dst-mac=%s,output=%s\"}' http://%s/wm/staticflowentrypusher/json" % (Dpid, args.servername+"_to", args.server_ip, origin_sourceMac, "0x800", request.data, choose_serverMac, choose_serverPort, args.controllerRestIp)
+	command = "curl -X DELETE -d '{\"name\":\"%s\"}' http://%s/wm/staticflowentrypusher/json" % (args.servername+"_to", args.controllerRestIp)
 	result = os.popen(command).read()
 	print command+"\n"
 
-	command = "curl -s -d '{\"switch\": \"%s\", \"name\":\"%s\", \"src-ip\":\"%s\", \"src-mac\":\"%s\", \"ether-type\":\"%s\", \"priority\":\"32768\",\"active\":\"true\", \"actions\":\"set-src-ip=%s,set-src-mac=%s,output=%s\"}' http://%s/wm/staticflowentrypusher/json" % (Dpid, args.servername+"_from", request.data, choose_serverMac, "0x800", args.server_ip, origin_sourceMac, sourcePort, args.controllerRestIp)
+	command = "curl -X DELETE -d '{\"name\":\"%s\"}' http://%s/wm/staticflowentrypusher/json" % (args.servername+"_from", args.controllerRestIp)
+	result = os.popen(command).read()
+	print command+"\n"
+
+	command = "curl -s -d '{\"switch\": \"%s\", \"name\":\"%s\", \"dst-mac\":\"%s\", \"ether-type\":\"%s\",\"dst-ip\":\"%s\", \"protocol\":\"%s\", \"dst-port\":\"%s\", \"priority\":\"32768\",\"active\":\"true\", \"actions\":\"set-dst-ip=%s,set-dst-mac=%s,output=%s\"}' http://%s/wm/staticflowentrypusher/json" % (Dpid, args.servername+"_to", origin_sourceMac, "0x800", args.server_ip, "6", "80", request.data, choose_serverMac, choose_serverPort, args.controllerRestIp)
+	result = os.popen(command).read()
+	print command+"\n"
+
+	command = "curl -s -d '{\"switch\": \"%s\", \"name\":\"%s\", \"src-mac\":\"%s\", \"ether-type\":\"%s\", \"src-ip\":\"%s\", \"protocol\":\"%s\", \"dst-port\":\"%s\", \"priority\":\"32768\",\"active\":\"true\", \"actions\":\"set-src-ip=%s,set-src-mac=%s,output=%s\"}' http://%s/wm/staticflowentrypusher/json" % (Dpid, args.servername+"_from", choose_serverMac, "0x800", request.data, "6", "80", args.server_ip, origin_sourceMac, sourcePort, args.controllerRestIp)
 	result = os.popen(command).read()
 	print command+"\n"
 
@@ -53,7 +61,7 @@ if __name__ == '__main__':
 		Dpid = parsedResult[0]['attachmentPoint'][0]['switchDPID']
 		print "Switch_DPID is "+Dpid
 	except IndexError:
-		print "ERROR : the specified end point (%s) must already been known to the controller (i.e., already have sent packets on the network, easy way to assure this is to do a ping (to any target) from the two hosts." % (args.dstAddress) 
+		print "ERROR : the specified end point must already been known to the controller (i.e., already have sent packets on the network, easy way to assure this is to do a ping (to any target) from the two hosts." 
 		sys.exit()
 	sourcePort = parsedResult[0]['attachmentPoint'][0]['port']
 	sourceMac = parsedResult[0]['mac'][0]
